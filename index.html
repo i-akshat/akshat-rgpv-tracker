@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Akshat's RGPV Tracker</title>
+<meta name="description" content="Akshat's semester tracker for RGPV — subjects, attendance, syllabus, exams, and goals across all 8 semesters.">
+<meta name="theme-color" content="#23303f">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700;8..60,800&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#f3ecdc;--surface:#fbf6ea;--card:#fffcf4;--card2:#fbf6ea;
+  --border:#cfc2a0;--border-soft:#e3d8ba;
+  --ink:#23303f;--ink-soft:#4a5a6c;
+  --brass:#b5762a;--brass-dim:#8f5c1f;--brass-glow:rgba(181,118,42,0.18);
+  --green:#4d7a52;--green-bg:rgba(77,122,82,0.12);
+  --red:#a3392f;--red-bg:rgba(163,57,47,0.1);--red-glow:rgba(163,57,47,0.14);
+  --yellow:#a87616;--yellow-bg:rgba(168,118,22,0.12);
+  --grey:#9a8f74;
+  --text:#23303f;--muted:#766c58;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:var(--bg);}
+body{
+  background:
+    repeating-linear-gradient(transparent 0,transparent 27px,rgba(35,48,63,0.035) 28px),
+    var(--bg);
+  color:var(--text);font-family:'Inter',sans-serif;
+  min-height:100vh;padding-bottom:92px;
+  -webkit-tap-highlight-color:transparent;
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.serif{font-family:'Source Serif 4',serif;}
+::selection{background:var(--brass);color:#fff;}
+
+/* HEADER */
+.header{text-align:center;padding:22px 16px 16px;border-bottom:2px solid var(--ink);background:var(--card);position:relative;}
+.header::after{content:'';position:absolute;left:0;right:0;bottom:-5px;height:3px;background:repeating-linear-gradient(90deg,var(--ink) 0 6px,transparent 6px 12px);opacity:.35;}
+.header .tag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--brass-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;font-weight:600;}
+.header h1{font-family:'Source Serif 4',serif;font-size:clamp(20px,5.5vw,27px);font-weight:700;color:var(--ink);letter-spacing:-0.2px;line-height:1.15;}
+.header h1 span{color:var(--brass);font-style:italic;}
+.header p{color:var(--muted);font-size:11px;margin-top:5px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.3px;}
+.sem-switcher{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;}
+.sem-switcher select{width:auto;margin:0;padding:7px 10px;font-size:12px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+
+/* NAV */
+.tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:2px solid var(--ink);z-index:100;padding-bottom:env(safe-area-inset-bottom);overflow-x:auto;}
+.tabbtn{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;padding:10px 2px 8px;background:none;border:none;color:var(--grey);font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.3px;text-transform:uppercase;font-weight:700;cursor:pointer;border-top:3px solid transparent;transition:color .15s;min-width:54px;}
+.tabbtn .ti{font-size:16px;}
+.tabbtn.active{color:var(--brass-dim);border-top-color:var(--brass);}
+.tabpage{display:none;}
+.tabpage.active{display:block;animation:fadein .2s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+/* LAYOUT */
+.wrap{max-width:760px;margin:0 auto;padding:14px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:16px;margin-bottom:12px;box-shadow:0 1px 0 rgba(35,48,63,0.04);position:relative;}
+.card::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;background:var(--border-soft);}
+.card-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--brass-dim);font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:'IBM Plex Mono',monospace;}
+.card-title .ct-right{font-size:9px;color:var(--muted);letter-spacing:0.5px;text-transform:none;font-weight:600;}
+
+/* BUTTONS */
+.btn{background:var(--ink);color:var(--card);border:none;border-radius:3px;padding:10px 16px;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:transform .1s,opacity .15s;letter-spacing:0.2px;}
+.btn:active{transform:scale(0.97);}
+.btn.ghost{background:transparent;border:1.5px solid var(--ink);color:var(--ink);}
+.btn.full{width:100%;}
+.btn.danger{background:transparent;border:1.5px solid var(--red);color:var(--red);}
+.btn.small{padding:7px 12px;font-size:11px;}
+.btn.tiny{padding:5px 9px;font-size:10px;border-radius:3px;}
+.btn-row{display:flex;gap:8px;}
+.btn-row .btn{flex:1;}
+
+/* INPUTS */
+input,textarea,select{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:3px;padding:10px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;margin-bottom:10px;accent-color:var(--brass);}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 2px var(--brass-glow);}
+textarea{resize:vertical;min-height:60px;}
+label.flabel{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;margin-top:2px;font-family:'IBM Plex Mono',monospace;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.field-row.three{grid-template-columns:1fr 1fr 1fr;}
+
+/* PROGRESS BARS */
+.bar-outer{background:var(--surface);border-radius:2px;height:7px;overflow:hidden;border:1px solid var(--border);}
+.bar-fill{background:repeating-linear-gradient(45deg,var(--brass-dim) 0 4px,var(--brass) 4px 8px);height:100%;border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+.bar-fill.green{background:repeating-linear-gradient(45deg,#3d6242 0 4px,var(--green) 4px 8px);}
+.bar-fill.yellow{background:repeating-linear-gradient(45deg,#7c5a10 0 4px,var(--yellow) 4px 8px);}
+
+/* DASHBOARD — admit-card style hero */
+.dash-hero{background:var(--card);border:2px solid var(--ink);border-radius:4px;padding:18px 20px;margin-bottom:12px;text-align:center;position:relative;}
+.dash-hero::before{content:'ADMIT CARD';position:absolute;top:8px;right:10px;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--border);font-weight:700;}
+.admit-name{position:absolute;top:8px;left:12px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--brass-dim);font-weight:700;}
+.dash-hero::after{content:'';position:absolute;left:-1px;right:-1px;top:62px;border-top:2px dashed var(--border);}
+.dash-hero .today-date{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;}
+.hero-stats{display:flex;align-items:center;justify-content:center;gap:18px;margin:16px 0 12px;flex-wrap:wrap;}
+.hero-stat{text-align:center;}
+.hero-num{font-size:34px;font-weight:700;line-height:1;color:var(--ink);font-family:'Source Serif 4',serif;}
+.hero-label{font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-top:4px;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;}
+.hero-divider{width:1px;height:36px;background:var(--border);}
+.sem-now{font-family:'Source Serif 4',serif;font-size:18px;font-weight:700;color:var(--ink);margin:4px 0 2px;}
+.sem-sub{font-size:11px;color:var(--brass-dim);font-weight:600;font-family:'IBM Plex Mono',monospace;}
+
+.status-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;letter-spacing:1.2px;border:1.5px solid var(--border);margin-bottom:8px;}
+.status-pill.ontrack{color:var(--green);border-color:var(--green);background:var(--green-bg);}
+.status-pill.warn{color:var(--yellow);border-color:var(--yellow);background:var(--yellow-bg);}
+.status-pill.behind{color:var(--red);border-color:var(--red);background:var(--red-bg);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+.status-detail{font-size:12px;color:var(--muted);line-height:1.45;}
+
+.backup-banner{display:flex;align-items:center;gap:10px;background:var(--yellow-bg);border:1.5px solid var(--yellow);border-radius:3px;padding:11px 13px;margin-bottom:12px;}
+.backup-banner.urgent{background:var(--red-bg);border-color:var(--red);}
+.backup-banner .bb-icon{font-size:18px;flex-shrink:0;}
+.backup-banner .bb-text{flex:1;font-size:11.5px;color:var(--text);line-height:1.4;}
+.backup-banner .bb-text b{color:var(--ink);}
+.backup-banner button{flex-shrink:0;background:var(--yellow);color:#fff;border:none;border-radius:3px;padding:7px 12px;font-size:11px;font-weight:800;font-family:'IBM Plex Mono',monospace;cursor:pointer;}
+.backup-banner.urgent button{background:var(--red);color:#fff;}
+
+.nm-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.nm-info .nm-label{font-size:14px;font-weight:700;color:var(--ink);}
+.nm-info .nm-date{font-size:10px;color:var(--muted);margin-top:2px;font-family:'IBM Plex Mono',monospace;}
+.nm-countdown{text-align:center;flex-shrink:0;}
+.nm-num{font-size:26px;font-weight:700;color:var(--brass);font-family:'Source Serif 4',serif;line-height:1;}
+.nm-sub{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;font-family:'IBM Plex Mono',monospace;}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.stat-grid.three{grid-template-columns:1fr 1fr 1fr;}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:12px 8px;text-align:center;}
+.stat-box .n{font-size:19px;font-weight:700;color:var(--brass);font-family:'Source Serif 4',serif;}
+.stat-box .n.green{color:var(--green);}
+.stat-box .n.yellow{color:var(--yellow);}
+.stat-box .l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;font-family:'IBM Plex Mono',monospace;}
+
+.quote-box{background:var(--card);border-left:3px solid var(--brass);border-radius:0 3px 3px 0;border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:12px 14px;font-size:13px;font-style:italic;color:var(--ink-soft);margin-bottom:12px;font-family:'Source Serif 4',serif;}
+.quote-author{font-size:10px;color:var(--muted);margin-top:5px;font-style:normal;font-family:'IBM Plex Mono',monospace;}
+
+/* SUBJECT ROWS (attendance / subjects pages) */
+.subj-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border-soft);}
+.subj-row:last-child{border-bottom:none;}
+.subj-main{flex:1;min-width:0;}
+.subj-name{font-size:13px;font-weight:700;color:var(--ink);}
+.subj-code{font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:1px;}
+.subj-pct{font-size:18px;font-weight:700;font-family:'Source Serif 4',serif;flex-shrink:0;width:50px;text-align:right;}
+.subj-pct.ok{color:var(--green);}
+.subj-pct.warn{color:var(--yellow);}
+.subj-pct.bad{color:var(--red);}
+.subj-pct.nodata{color:var(--muted);}
+.subj-bar-wrap{margin-top:6px;}
+
+.att-actions{display:flex;gap:6px;margin-top:8px;}
+.att-actions .btn{flex:1;}
+
+/* TODAY ATTENDANCE GRID */
+.att-today-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--border-soft);}
+.att-today-row:last-child{border-bottom:none;}
+.att-today-name{font-size:12.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;}
+.att-btns{display:flex;gap:5px;flex-shrink:0;}
+.att-btn{width:32px;height:32px;border-radius:3px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;}
+.att-btn.p.sel{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+.att-btn.a.sel{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.att-btn.c.sel{background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow);}
+
+/* SUBJECT EDIT CARD */
+.subj-edit-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:12px;margin-bottom:10px;position:relative;}
+.subj-edit-card .del-x{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--grey);font-size:14px;cursor:pointer;padding:4px;}
+
+/* TIMETABLE */
+.tt-row{padding:10px 0;border-bottom:1px solid var(--border-soft);}
+.tt-row:last-child{border-bottom:none;}
+.tt-name{font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:7px;}
+.tt-days{display:flex;gap:5px;}
+.tt-day{flex:1;padding:7px 2px;text-align:center;border-radius:3px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;font-family:'IBM Plex Mono',monospace;}
+.tt-day.sel{background:var(--brass-glow);border-color:var(--brass);color:var(--brass-dim);}
+
+/* DEADLINES */
+.deadline-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-soft);}
+.deadline-row:last-child{border-bottom:none;}
+.deadline-row input[type=checkbox]{width:18px;height:18px;flex-shrink:0;accent-color:var(--brass);}
+.deadline-main{flex:1;min-width:0;}
+.deadline-title{font-size:12.5px;font-weight:700;color:var(--ink);}
+.deadline-title.done{color:var(--muted);text-decoration:line-through;}
+.deadline-sub{font-size:10px;color:var(--muted);margin-top:1px;font-family:'IBM Plex Mono',monospace;}
+.deadline-badge{font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;flex-shrink:0;font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.deadline-badge.overdue{background:var(--red-bg);color:var(--red);}
+.deadline-badge.soon{background:var(--yellow-bg);color:var(--yellow);}
+.deadline-badge.ok{background:var(--green-bg);color:var(--green);}
+.deadline-del{background:none;border:none;color:var(--grey);font-size:13px;cursor:pointer;flex-shrink:0;}
+
+/* SYLLABUS UNITS */
+.unit-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-soft);}
+.unit-row:last-child{border-bottom:none;}
+.unit-row input[type=checkbox]{width:18px;height:18px;flex-shrink:0;margin:1px 0 0;accent-color:var(--brass);}
+.unit-row label{font-size:12.5px;color:var(--text);line-height:1.4;flex:1;}
+.unit-row label.done{color:var(--muted);text-decoration:line-through;}
+.unit-del{background:none;border:none;color:var(--grey);font-size:13px;cursor:pointer;flex-shrink:0;}
+.subj-tab-list{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px;}
+.subj-tab{flex-shrink:0;padding:7px 13px;border-radius:3px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.subj-tab.active{color:var(--brass-dim);border-color:var(--brass);background:var(--brass-glow);}
+
+/* EXAMS */
+.exam-subj-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:13px;margin-bottom:10px;}
+.exam-subj-name{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+.exam-marks-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.exam-marks-row .mfield{min-width:0;}
+.exam-marks-row .mfield label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:3px;font-family:'IBM Plex Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.exam-marks-row input{margin-bottom:0;padding:8px 4px;font-size:13px;text-align:center;}
+.exam-total{margin-top:8px;font-size:11px;color:var(--muted);text-align:right;}
+.exam-total b{color:var(--brass-dim);font-family:'IBM Plex Mono',monospace;}
+
+/* GOALS */
+.goal-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-soft);}
+.goal-item:last-child{border-bottom:none;}
+.goal-item input[type=checkbox]{width:18px;height:18px;flex-shrink:0;accent-color:var(--brass);}
+.goal-item label{font-size:13px;color:var(--text);flex:1;}
+.goal-item label.done{color:var(--muted);text-decoration:line-through;}
+.goal-week-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:10px 12px;margin-bottom:8px;}
+.gw-head{display:flex;justify-content:space-between;margin-bottom:6px;}
+.gwt{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.goal-tabs{display:flex;gap:6px;margin-bottom:12px;}
+.goal-tab{flex:1;padding:8px;border-radius:3px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;}
+.goal-tab.active{color:var(--brass-dim);border-color:var(--brass);background:var(--brass-glow);}
+
+/* STUDY LOG / CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-cell{aspect-ratio:1;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--border-soft);background:var(--surface);color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.cal-cell.green{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+.cal-cell.yellow{background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow);}
+.cal-cell.grey{background:rgba(154,143,116,0.18);color:var(--grey);}
+.cal-cell.empty{visibility:hidden;}
+.cal-cell.today{box-shadow:0 0 0 2px var(--brass);}
+.cal-dow{font-size:9px;color:var(--muted);text-align:center;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;}
+.cal-legend{display:flex;gap:14px;margin-top:12px;justify-content:center;flex-wrap:wrap;}
+.cal-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);}
+.cal-legend-dot{width:9px;height:9px;border-radius:2px;}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:24px 12px;color:var(--muted);font-size:12px;line-height:1.6;}
+.empty-state .em{font-size:26px;display:block;margin-bottom:8px;opacity:0.6;}
+
+/* SGPA */
+.sgpa-box{text-align:center;padding:16px 0;}
+.sgpa-num{font-size:46px;font-weight:700;color:var(--brass);font-family:'Source Serif 4',serif;}
+.sgpa-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px;font-family:'IBM Plex Mono',monospace;}
+
+/* TOAST */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);border:1px solid var(--ink);color:#fff;padding:10px 18px;border-radius:3px;font-size:12px;font-weight:700;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;font-family:'IBM Plex Mono',monospace;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(35,48,63,0.55);z-index:300;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.show{display:flex;}
+.modal-box{background:var(--card);border:2px solid var(--ink);border-radius:4px;padding:18px;max-width:440px;width:100%;max-height:85vh;overflow-y:auto;}
+.modal-box h3{font-family:'Source Serif 4',serif;font-size:17px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+.modal-box p.sub{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5;}
+
+.section-divider{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin:18px 0 8px;font-family:'IBM Plex Mono',monospace;display:flex;align-items:center;gap:8px;}
+.section-divider::after{content:'';flex:1;height:1px;background:var(--border-soft);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="tag">RGPV &middot; ALL SEMESTERS</div>
+  <h1>Akshat's <span>Tracker</span></h1>
+  <p>Subjects &middot; Attendance &middot; Exams &middot; Goals</p>
+  <div class="sem-switcher">
+    <select id="sem-select" onchange="switchSemester(this.value)"></select>
+    <button class="btn ghost tiny" onclick="openSemSettingsModal()">⚙ Sem Settings</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ DASHBOARD ============ -->
+<div class="tabpage active" id="page-dashboard">
+  <div class="dash-hero">
+    <div class="admit-name">AKSHAT</div>
+    <div class="today-date mono" id="dash-date"></div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-num" id="dash-daynum">-</div><div class="hero-label">Day of Sem</div></div>
+      <div class="hero-divider"></div>
+      <div class="hero-stat"><div class="hero-num" id="dash-daysleft">-</div><div class="hero-label">Days Left</div></div>
+    </div>
+    <div class="sem-now" id="dash-sem-now">-</div>
+    <div class="sem-sub" id="dash-sem-sub">-</div>
+  </div>
+
+  <div id="backup-banner" style="display:none;"></div>
+
+  <div class="card">
+    <div id="status-pill" class="status-pill ontrack"><span class="status-dot"></span><span id="status-label">ON TRACK</span></div>
+    <div class="status-detail" id="status-detail">-</div>
+  </div>
+
+  <div class="stat-grid three">
+    <div class="stat-box"><div class="n" id="dash-avg-att">-</div><div class="l">Avg Attendance</div></div>
+    <div class="stat-box"><div class="n" id="dash-syllabus-pct">-</div><div class="l">Syllabus Done</div></div>
+    <div class="stat-box"><div class="n" id="dash-streak">-</div><div class="l">Day Streak</div></div>
+  </div>
+
+  <div class="stat-grid" style="grid-template-columns:1fr 1fr;">
+    <div class="stat-box"><div class="n" id="dash-sgpa-mini">-</div><div class="l">SGPA This Sem</div></div>
+    <div class="stat-box"><div class="n" id="dash-cgpa-mini">-</div><div class="l">CGPA Overall</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 Next Exam / Milestone</div>
+    <div class="nm-row">
+      <div class="nm-info">
+        <div class="nm-label" id="nm-label">-</div>
+        <div class="nm-date mono" id="nm-date"></div>
+      </div>
+      <div class="nm-countdown">
+        <div class="nm-num" id="nm-days">-</div>
+        <div class="nm-sub">days</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚠ Attendance Watch</div>
+    <div id="dash-att-watch"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📌 Upcoming Deadlines</div>
+    <div id="dash-deadline-watch"></div>
+  </div>
+
+  <div class="quote-box" id="dash-quote"></div>
+
+  <div class="card">
+    <div class="card-title">✓ Today's Goals <span class="ct-right" id="dash-goals-count"></span></div>
+    <div id="dash-today-goals"></div>
+  </div>
+</div>
+
+<!-- ============ SUBJECTS ============ -->
+<div class="tabpage" id="page-subjects">
+  <div class="card">
+    <div class="card-title">📚 This Semester's Subjects <span class="ct-right" id="subj-count"></span></div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5;">Edit this list at the start of each semester to match your actual time table.</p>
+    <div id="subjects-edit-list"></div>
+    <button class="btn ghost full small" onclick="addSubjectRow()">+ Add Subject</button>
+  </div>
+  <button class="btn full" onclick="saveSubjects()">Save Subjects</button>
+
+  <div class="section-divider">Weekly Timetable</div>
+  <div class="card">
+    <div class="card-title">🗓 Which Days Each Subject Meets</div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5;">Tap the days each subject has class. This filters "Mark Today" to only show subjects you actually have today.</p>
+    <div id="timetable-edit-list"></div>
+  </div>
+
+  <div class="section-divider">Quick Stats</div>
+  <div class="card">
+    <div class="card-title">🎓 Credits This Semester <span class="ct-right" id="subj-total-credits"></span></div>
+    <div id="subj-credit-breakdown"></div>
+  </div>
+</div>
+
+<!-- ============ ATTENDANCE ============ -->
+<div class="tabpage" id="page-attendance">
+  <div class="card">
+    <div class="card-title">✅ Mark Today <span class="ct-right mono" id="att-today-date"></span></div>
+    <div id="att-today-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Subject-wise Attendance</div>
+    <div id="att-subject-list"></div>
+  </div>
+</div>
+
+<!-- ============ SYLLABUS ============ -->
+<div class="tabpage" id="page-syllabus">
+  <div class="card">
+    <div class="card-title">📌 Assignment &amp; Lab Deadlines <span class="ct-right" id="deadline-count"></span></div>
+    <div id="deadlines-list"></div>
+    <div class="field-row" style="grid-template-columns:1fr 1fr auto;margin-top:8px;gap:6px;">
+      <select id="new-deadline-subj" style="margin-bottom:0;"></select>
+      <input type="date" id="new-deadline-date" style="margin-bottom:0;">
+      <button class="btn small" onclick="addDeadline()">Add</button>
+    </div>
+    <input type="text" id="new-deadline-title" placeholder="What's due? (e.g. Lab file Unit 3)" style="margin-top:6px;margin-bottom:0;" onkeydown="if(event.key==='Enter')addDeadline()">
+  </div>
+
+  <div class="card">
+    <div class="card-title">📖 Syllabus Tracker</div>
+    <div class="subj-tab-list" id="syllabus-subj-tabs"></div>
+    <div id="syllabus-units-area"></div>
+    <div class="field-row" style="margin-top:10px;">
+      <input type="text" id="new-unit-input" placeholder="Add topic / unit..." style="margin-bottom:0;" onkeydown="if(event.key==='Enter')addUnit()">
+      <button class="btn small" onclick="addUnit()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ EXAMS ============ -->
+<div class="tabpage" id="page-exams">
+  <div class="card">
+    <div class="card-title">🏆 CGPA — All Semesters</div>
+    <div class="sgpa-box" style="padding:10px 0;">
+      <div class="sgpa-num" id="cgpa-num" style="font-size:34px;">—</div>
+      <div class="sgpa-label">Cumulative GPA</div>
+    </div>
+    <p style="font-size:10px;color:var(--muted);text-align:center;" id="cgpa-note">No completed semesters with End-Sem marks yet.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎯 SGPA Estimate <span class="ct-right" id="sgpa-which-sem"></span></div>
+    <div class="sgpa-box">
+      <div class="sgpa-num" id="sgpa-num">—</div>
+      <div class="sgpa-label">Estimated SGPA</div>
+    </div>
+    <p style="font-size:10px;color:var(--muted);text-align:center;" id="sgpa-note">Enter End-Sem marks below to see your SGPA estimate.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📝 Internal &amp; External Marks</div>
+    <div id="exam-marks-list"></div>
+  </div>
+</div>
+
+<!-- ============ GOALS ============ -->
+<div class="tabpage" id="page-goals">
+  <div class="goal-tabs">
+    <button class="goal-tab active" id="goal-tab-weekly" onclick="switchGoalSection('weekly')">Weekly</button>
+    <button class="goal-tab" id="goal-tab-calendar" onclick="switchGoalSection('calendar')">Study Log</button>
+  </div>
+
+  <div id="goals-weekly-section">
+    <div class="card">
+      <div class="card-title">🎯 This Week's Goals</div>
+      <div class="field-row" style="grid-template-columns:1fr auto;">
+        <input type="text" id="new-goal-input" placeholder="Add a goal for this week..." style="margin-bottom:0;" onkeydown="if(event.key==='Enter')addWeeklyGoal()">
+        <button class="btn small" onclick="addWeeklyGoal()">Add</button>
+      </div>
+      <div id="weekly-goals-list" style="margin-top:10px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📜 Past Weeks</div>
+      <div id="past-weeks-list"></div>
+    </div>
+  </div>
+
+  <div id="goals-calendar-section" style="display:none;">
+    <div class="card">
+      <div class="card-title">🔥 Study Streak <span class="ct-right mono" id="cal-month-label"></span></div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="n green" id="study-streak-cur">0</div><div class="l">Current Streak</div></div>
+        <div class="stat-box"><div class="n" id="study-streak-best">0</div><div class="l">Best Streak</div></div>
+      </div>
+      <div class="cal-grid" id="cal-dow-row"></div>
+      <div class="cal-grid" id="cal-grid" style="margin-top:4px;"></div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--green);"></div>Studied well</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--yellow);"></div>Some study</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--grey);"></div>Missed</div>
+      </div>
+      <p style="font-size:10px;color:var(--muted);text-align:center;margin-top:10px;">Tap a day to log your study status.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SETTINGS / BACKUP ============ -->
+<div class="tabpage" id="page-settings">
+  <div class="card">
+    <div class="card-title">💾 Backup Your Data</div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5;">Everything is stored only on this device/browser. Export a backup code regularly, especially before clearing browser data or switching phones.</p>
+    <div class="btn-row">
+      <button class="btn full" onclick="openExportModal()">Export Backup</button>
+      <button class="btn ghost full" onclick="openImportModal()">Import Backup</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🗑 Danger Zone</div>
+    <button class="btn danger full" onclick="confirmReset()">Reset All Data</button>
+  </div>
+  <div class="card">
+    <div class="card-title">ℹ️ About</div>
+    <p style="font-size:11px;color:var(--muted);line-height:1.6;">Built for tracking every RGPV semester: subjects, attendance (75% rule), syllabus progress, internal/external marks, and weekly accountability goals. Update subjects at the start of each new semester via the Subjects tab.</p>
+  </div>
+</div>
+
+</div>
+
+<div class="tabbar">
+  <button class="tabbtn active" data-page="dashboard" onclick="switchPage('dashboard')"><span class="ti">🏠</span>Home</button>
+  <button class="tabbtn" data-page="subjects" onclick="switchPage('subjects')"><span class="ti">📚</span>Subjects</button>
+  <button class="tabbtn" data-page="attendance" onclick="switchPage('attendance')"><span class="ti">✅</span>Attend</button>
+  <button class="tabbtn" data-page="syllabus" onclick="switchPage('syllabus')"><span class="ti">📖</span>Syllabus</button>
+  <button class="tabbtn" data-page="exams" onclick="switchPage('exams')"><span class="ti">🎯</span>Exams</button>
+  <button class="tabbtn" data-page="goals" onclick="switchPage('goals')"><span class="ti">🔥</span>Goals</button>
+  <button class="tabbtn" data-page="settings" onclick="switchPage('settings')"><span class="ti">⚙</span>More</button>
+</div>
+
+<div id="toast"></div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-bg" id="export-modal">
+  <div class="modal-box">
+    <h3>Export Backup</h3>
+    <p class="sub" id="export-modal-sub">Copy this code and save it somewhere safe (Notes app, email to yourself, etc).</p>
+    <textarea id="export-text" style="min-height:120px;font-family:'IBM Plex Mono',monospace;font-size:10px;" readonly></textarea>
+    <div class="btn-row">
+      <button class="btn full" onclick="copyExportText()">Copy</button>
+      <button class="btn ghost full" onclick="closeExportModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-bg" id="import-modal">
+  <div class="modal-box">
+    <h3>Import Backup</h3>
+    <p class="sub">Paste your backup code below. This will overwrite current data.</p>
+    <textarea id="import-text" style="min-height:120px;font-family:'IBM Plex Mono',monospace;font-size:10px;" placeholder="Paste backup code here..."></textarea>
+    <div class="btn-row">
+      <button class="btn full" onclick="importData()">Restore</button>
+      <button class="btn ghost full" onclick="closeImportModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEM SETTINGS MODAL -->
+<div class="modal-bg" id="sem-settings-modal">
+  <div class="modal-box">
+    <h3>Semester Settings</h3>
+    <p class="sub">Set the start and end-sem exam dates for the current semester. Used for day counters and countdowns.</p>
+    <label class="flabel">Semester Start Date</label>
+    <input type="date" id="sem-start-input">
+    <label class="flabel">End-Sem Exam Start Date</label>
+    <input type="date" id="sem-endexam-input">
+    <label class="flabel">Mid-Sem Exam Date (optional)</label>
+    <input type="date" id="sem-midexam-input">
+    <div class="btn-row">
+      <button class="btn full" onclick="saveSemSettings()">Save</button>
+      <button class="btn ghost full" onclick="closeSemSettingsModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================ CONSTANTS ============================================================ */
+const STORE_KEY='rgpv_sem_tracker_v1';
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+const QUOTES=[
+  {q:"You don't need to feel motivated. You need to open the book.",a:"Dev Wisdom"},
+  {q:"75% attendance isn't a suggestion, it's the line between writing the exam and not.",a:"RGPV Rule"},
+  {q:"A backlog subject is just a syllabus you haven't opened yet.",a:"Unknown"},
+  {q:"Internals are free marks. Don't give them away.",a:"Senior Advice"},
+  {q:"Consistency beats intensity. Show up daily, not just before exams.",a:"Unknown"},
+  {q:"The secret of getting ahead is getting started.",a:"Mark Twain"},
+  {q:"It always seems impossible until it's done.",a:"Nelson Mandela"},
+  {q:"Every checkbox you tick is proof you didn't wait to feel ready.",a:"Your Tracker"},
+  {q:"You're not behind. You're on Day N of the semester. Keep going.",a:"Your Roadmap"},
+  {q:"Discipline is choosing the syllabus over the scroll.",a:"Unknown"},
+  {q:"Nobody fails because the syllabus was too long. They fail because they started late.",a:"Dev Wisdom"},
+  {q:"Consistency is what transforms average into excellence.",a:"Unknown"},
+];
+
+/* Default subjects for Sem 1 & 2 (RGPV Group A: CS, IT, EE, EX, EI, FT, AT, MI, BT, BM - AICTE Flexible Curricula) */
+const DEFAULT_SUBJECTS={
+  1:[
+    {code:'BT101',name:'Engineering Chemistry',credits:4,maxEnd:70,maxMid:20,maxQuiz:10,maxLab:30,maxSess:20},
+    {code:'BT102',name:'Mathematics-I',credits:4,maxEnd:70,maxMid:20,maxQuiz:10,maxLab:0,maxSess:0},
+    {code:'BT103',name:'English for Communication',credits:4,maxEnd:70,maxMid:20,maxQuiz:10,maxLab:30,maxSess:20},
+    {code:'BT104',name:'Basic Electrical & Electronics Engg',credits:3,maxEnd:70,maxMid:20,maxQuiz:10,maxLab:30,maxSess:20},
+    {code:'BT105',name:'Engineering Graphics',credits:3,maxEnd:70,maxMid:20,maxQuiz:10,maxLab:30,maxSess:20},
+    {code:'BT106',name:'Manufacturing Practices',credits:1,maxEnd:0,maxMid:0,maxQuiz:0,maxLab:15,maxSess:10},
+  ],
+  2:[
+    {code:'BT201',name:'Engineering Physics',credits:4,maxEnd:70,maxMid:20,maxQuiz:10,maxLab:30,maxSess:20},
+    {code:'BT202',name:'Mathematics-II',credits:4,maxEnd:70,maxMid:20,maxQuiz:10,maxLab:0,maxSess:0},
+    {code:'BT203',name:'Basic Mechanical Engineering',credits:4,maxEnd:70,maxMid:20,maxQuiz:10,maxLab:30,maxSess:20},
+    {code:'BT204',name:'Basic Civil Engg & Mechanics',credits:4,maxEnd:70,maxMid:20,maxQuiz:10,maxLab:30,maxSess:20},
+    {code:'BT205',name:'Basic Computer Engineering',credits:4,maxEnd:70,maxMid:20,maxQuiz:10,maxLab:30,maxSess:20},
+    {code:'BT206',name:'Language Lab & Seminars',credits:1,maxEnd:0,maxMid:0,maxQuiz:0,maxLab:30,maxSess:20},
+  ],
+};
+
+const SEM_LABELS={1:'1st Semester',2:'2nd Semester',3:'3rd Semester',4:'4th Semester',5:'5th Semester',6:'6th Semester',7:'7th Semester',8:'8th Semester'};
+
+/* ============================================================ STATE ============================================================ */
+function defaultSemData(){
+  return {
+    subjects:[],
+    semStart:null,
+    endExamDate:null,
+    midExamDate:null,
+    attendance:{},        // { 'YYYY-MM-DD': { subjCode: 'p'|'a'|'c' } }
+    syllabus:{},          // { subjCode: [ {id,text,done} ] }
+    marks:{},             // { subjCode: {endsem,midsem,quiz,lab,sess} }
+    goalWeeks:[],
+    studyCal:{},          // { 'YYYY-MM-DD': 'green'|'yellow'|'grey' }
+    timetable:{},         // { subjCode: [1,3,5] } -- weekday numbers (0=Sun..6=Sat) this subject meets
+    deadlines:[]          // [ {id, subjCode, title, dueDate, done} ]
+  };
+}
+
+function defaultState(){
+  let sems={};
+  for(let i=1;i<=8;i++){
+    sems[i]=defaultSemData();
+    if(DEFAULT_SUBJECTS[i]) sems[i].subjects=DEFAULT_SUBJECTS[i].map(s=>Object.assign({},s));
+  }
+  return { version:1, currentSem:2, sems, lastBackupAt:null };
+}
+
+function loadState(){
+  try{
+    let raw=localStorage.getItem(STORE_KEY);
+    if(!raw) return defaultState();
+    let parsed=JSON.parse(raw);
+    let base=defaultState();
+    let merged=Object.assign({},base,parsed);
+    merged.sems=Object.assign({},base.sems,parsed.sems||{});
+    for(let i=1;i<=8;i++){
+      merged.sems[i]=Object.assign({},defaultSemData(),merged.sems[i]||{});
+    }
+    return merged;
+  }catch(e){ return defaultState(); }
+}
+
+let STATE=loadState();
+function save(){ localStorage.setItem(STORE_KEY,JSON.stringify(STATE)); }
+function curSem(){ return STATE.sems[STATE.currentSem]; }
+
+/* EXPORT / IMPORT */
+function openExportModal(){
+  let json=JSON.stringify(STATE);
+  let encoded='RGPVTRACKER1::'+btoa(unescape(encodeURIComponent(json)));
+  document.getElementById('export-text').value=encoded;
+  document.getElementById('export-modal').classList.add('show');
+  STATE.lastBackupAt=todayKey(); save(); renderDashboard();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(encoded).then(()=>{
+      document.getElementById('export-modal-sub').textContent='Auto-copied to clipboard! Also save it manually below just in case.';
+    }).catch(()=>{});
+  }
+}
+function closeExportModal(){ document.getElementById('export-modal').classList.remove('show'); }
+function copyExportText(){
+  let box=document.getElementById('export-text');
+  box.select(); box.setSelectionRange(0,99999);
+  try{ document.execCommand('copy'); }catch(e){}
+  if(navigator.clipboard) navigator.clipboard.writeText(box.value).then(()=>toast('Copied ✓')).catch(()=>toast('Select text and copy manually'));
+  else toast('Select text and copy manually');
+}
+function openImportModal(){ document.getElementById('import-text').value=''; document.getElementById('import-modal').classList.add('show'); }
+function closeImportModal(){ document.getElementById('import-modal').classList.remove('show'); }
+function importData(){
+  let raw=document.getElementById('import-text').value.trim();
+  if(!raw){ toast('Paste your backup code first'); return; }
+  if(!raw.startsWith('RGPVTRACKER1::')){ toast('Invalid backup code'); return; }
+  try{
+    let json=decodeURIComponent(escape(atob(raw.replace('RGPVTRACKER1::',''))));
+    let parsed=JSON.parse(json);
+    let base=defaultState();
+    STATE=Object.assign({},base,parsed);
+    STATE.sems=Object.assign({},base.sems,parsed.sems||{});
+    for(let i=1;i<=8;i++) STATE.sems[i]=Object.assign({},defaultSemData(),STATE.sems[i]||{});
+    save(); closeImportModal(); populateSemSelect(); renderAll();
+    toast('Backup restored ✓');
+  }catch(e){ toast('Could not read backup — copy it fully'); }
+}
+function confirmReset(){
+  if(confirm('Reset ALL data for ALL semesters? This cannot be undone.')){
+    STATE=defaultState(); save(); populateSemSelect(); renderAll(); toast('Data reset');
+  }
+}
+
+/* ============================================================ DATE HELPERS ============================================================ */
+function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function todayKey(){ return fmtDate(new Date()); }
+function parseDate(k){ let [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d||1); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ============================================================ NAVIGATION ============================================================ */
+function switchPage(name){
+  document.querySelectorAll('.tabpage').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===name));
+  if(name==='dashboard') renderDashboard();
+  if(name==='subjects') renderSubjectsPage();
+  if(name==='attendance') renderAttendancePage();
+  if(name==='syllabus') renderSyllabusPage();
+  if(name==='exams') renderExamsPage();
+  if(name==='goals') renderGoals();
+  window.scrollTo(0,0);
+}
+function renderAll(){
+  renderDashboard(); renderSubjectsPage(); renderAttendancePage(); renderSyllabusPage(); renderExamsPage(); renderGoals();
+}
+
+function populateSemSelect(){
+  let sel=document.getElementById('sem-select');
+  sel.innerHTML=Object.keys(SEM_LABELS).map(k=>'<option value="'+k+'">'+SEM_LABELS[k]+'</option>').join('');
+  sel.value=STATE.currentSem;
+}
+function switchSemester(n){
+  STATE.currentSem=parseInt(n); save(); renderAll();
+  toast(SEM_LABELS[n]+' selected');
+}
+
+/* SEM SETTINGS MODAL */
+function openSemSettingsModal(){
+  let s=curSem();
+  document.getElementById('sem-start-input').value=s.semStart||'';
+  document.getElementById('sem-endexam-input').value=s.endExamDate||'';
+  document.getElementById('sem-midexam-input').value=s.midExamDate||'';
+  document.getElementById('sem-settings-modal').classList.add('show');
+}
+function closeSemSettingsModal(){ document.getElementById('sem-settings-modal').classList.remove('show'); }
+function saveSemSettings(){
+  let s=curSem();
+  s.semStart=document.getElementById('sem-start-input').value||null;
+  s.endExamDate=document.getElementById('sem-endexam-input').value||null;
+  s.midExamDate=document.getElementById('sem-midexam-input').value||null;
+  save(); closeSemSettingsModal(); renderDashboard();
+  toast('Semester settings saved');
+}
+
+/* ============================================================ ATTENDANCE HELPERS ============================================================ */
+function getAttendanceStats(subjCode){
+  let s=curSem(); let total=0,present=0;
+  Object.values(s.attendance).forEach(day=>{
+    if(day[subjCode]==='p'){ present++; total++; }
+    else if(day[subjCode]==='a'){ total++; }
+    // 'c' (cancelled) doesn't count toward total
+  });
+  let pct=total?Math.round(present/total*100):null; // null = no data logged yet
+  return {present,total,pct};
+}
+function getOverallAttendance(){
+  // returns {pct:number|null, anyData:boolean}
+  let s=curSem(); if(!s.subjects.length) return {pct:null,anyData:false};
+  let withData=s.subjects.map(sub=>getAttendanceStats(sub.code)).filter(x=>x.total>0);
+  if(!withData.length) return {pct:null,anyData:false};
+  let sum=withData.reduce((a,x)=>a+x.pct,0);
+  return {pct:Math.round(sum/withData.length),anyData:true};
+}
+function attClass(pct){ if(pct==null) return 'nodata'; return pct>=75?'ok':(pct>=65?'warn':'bad'); }
+
+/* ============================================================ DASHBOARD ============================================================ */
+function renderBackupBanner(){
+  let el=document.getElementById('backup-banner');
+  if(!el) return;
+  let hasAnyData = Object.values(STATE.sems).some(s=>s.subjects.length || Object.keys(s.attendance).length || Object.keys(s.studyCal).length || s.goalWeeks.length);
+  if(!hasAnyData){ el.style.display='none'; return; }
+  let daysSince = STATE.lastBackupAt ? Math.round((parseDate(todayKey())-parseDate(STATE.lastBackupAt))/86400000) : null;
+  let show=false, urgent=false, msg='';
+  if(daysSince===null){
+    show=true; urgent=true;
+    msg='<b>You\'ve never backed up.</b> Everything lives only in this browser — clearing data or switching phones wipes it.';
+  } else if(daysSince>=14){
+    show=true; urgent=true;
+    msg='<b>Last backup was '+daysSince+' days ago.</b> You\'re overdue — back up now before you lose anything.';
+  } else if(daysSince>=7){
+    show=true; urgent=false;
+    msg='<b>Last backup was '+daysSince+' days ago.</b> Worth refreshing your backup code.';
+  }
+  if(!show){ el.style.display='none'; return; }
+  el.style.display='flex';
+  el.className='backup-banner'+(urgent?' urgent':'');
+  el.innerHTML='<span class="bb-icon">'+(urgent?'⚠️':'💾')+'</span><span class="bb-text">'+msg+'</span><button onclick="openExportModal()">Back up</button>';
+}
+function renderDashboard(){
+  let s=curSem();
+  let now=new Date();
+  let days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  document.getElementById('dash-date').textContent=days[now.getDay()]+', '+MONTH_NAMES[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
+
+  renderBackupBanner();
+
+  document.getElementById('dash-sem-now').textContent=SEM_LABELS[STATE.currentSem];
+  document.getElementById('dash-sem-sub').textContent=s.subjects.length+' subjects this semester';
+
+  // day counters
+  if(s.semStart){
+    let start=parseDate(s.semStart); start.setHours(0,0,0,0);
+    let n2=new Date(now); n2.setHours(0,0,0,0);
+    let dayNum=Math.max(1,Math.floor((n2-start)/86400000)+1);
+    document.getElementById('dash-daynum').textContent=dayNum;
+    if(s.endExamDate){
+      let end=parseDate(s.endExamDate);
+      let daysLeft=Math.max(0,Math.round((end-n2)/86400000));
+      document.getElementById('dash-daysleft').textContent=daysLeft;
+    } else {
+      document.getElementById('dash-daysleft').textContent='—';
+    }
+  } else {
+    document.getElementById('dash-daynum').textContent='—';
+    document.getElementById('dash-daysleft').textContent='—';
+  }
+
+  // status pill: attendance + syllabus based
+  let attInfo=getOverallAttendance();
+  let avgAtt=attInfo.pct;
+  let synPct=getOverallSyllabusPct();
+  let pill=document.getElementById('status-pill');
+  if(!s.subjects.length){
+    pill.className='status-pill warn';
+    document.getElementById('status-label').textContent='SET UP NEEDED';
+    document.getElementById('status-detail').textContent='Add your subjects in the Subjects tab to start tracking this semester.';
+  } else if(attInfo.anyData && avgAtt<75){
+    pill.className='status-pill behind';
+    document.getElementById('status-label').textContent='ATTENDANCE RISK';
+    document.getElementById('status-detail').textContent='Your average attendance is '+avgAtt+'%. RGPV requires 75% minimum to be allowed in end-sem exams. Check the Attendance tab now.';
+  } else if(synPct<40 && s.endExamDate && daysUntil(s.endExamDate)<45 && daysUntil(s.endExamDate)>=0){
+    pill.className='status-pill warn';
+    document.getElementById('status-label').textContent='SYLLABUS BEHIND';
+    document.getElementById('status-detail').textContent='Exams are getting close and syllabus completion is only '+synPct+'%. Time to pick up the pace.';
+  } else if(!attInfo.anyData){
+    pill.className='status-pill warn';
+    document.getElementById('status-label').textContent='NO ATTENDANCE LOGGED';
+    document.getElementById('status-detail').textContent='Start marking daily attendance in the Attend tab so this dashboard means something.';
+  } else {
+    pill.className='status-pill ontrack';
+    document.getElementById('status-label').textContent='ON TRACK';
+    document.getElementById('status-detail').textContent='Attendance at '+avgAtt+'%, syllabus '+synPct+'% complete. Keep showing up.';
+  }
+
+  document.getElementById('dash-avg-att').textContent=attInfo.anyData?avgAtt+'%':'—';
+  document.getElementById('dash-avg-att').className='n '+(!attInfo.anyData?'':(avgAtt>=75?'green':(avgAtt>=65?'yellow':'')));
+  document.getElementById('dash-syllabus-pct').textContent=s.subjects.length?synPct+'%':'—';
+  computeStudyStreak();
+  document.getElementById('dash-streak').textContent=STATE._curStreak||0;
+
+  let semGPAInfo=computeSemGPA(s);
+  document.getElementById('dash-sgpa-mini').textContent=semGPAInfo.includedCount?semGPAInfo.sgpa.toFixed(2):'—';
+  let cgpaInfo=computeCGPA();
+  document.getElementById('dash-cgpa-mini').textContent=cgpaInfo.semsWithData?cgpaInfo.cgpa.toFixed(2):'—';
+
+  // next milestone
+  let allMilestones=[];
+  if(s.midExamDate) allMilestones.push({date:s.midExamDate,icon:'📝',label:'Mid-Sem Exams'});
+  if(s.endExamDate) allMilestones.push({date:s.endExamDate,icon:'🎓',label:'End-Sem Exams'});
+  let upcoming=allMilestones.filter(m=>m.date>=todayKey()).sort((a,b)=>a.date.localeCompare(b.date));
+  if(upcoming.length){
+    let m=upcoming[0];
+    document.getElementById('nm-label').textContent=m.icon+' '+m.label;
+    document.getElementById('nm-date').textContent=parseDate(m.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    document.getElementById('nm-days').textContent=daysUntil(m.date);
+  } else if(allMilestones.length){
+    let past=allMilestones.sort((a,b)=>b.date.localeCompare(a.date))[0];
+    document.getElementById('nm-label').textContent=past.icon+' '+past.label+' (passed)';
+    document.getElementById('nm-date').textContent=parseDate(past.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    document.getElementById('nm-days').textContent='0';
+  } else {
+    document.getElementById('nm-label').textContent='No dates set';
+    document.getElementById('nm-date').textContent='Tap ⚙ Sem Settings to add exam dates';
+    document.getElementById('nm-days').textContent='—';
+  }
+
+  // attendance watch
+  let watch=document.getElementById('dash-att-watch');
+  let risky=s.subjects.map(sub=>({sub,stats:getAttendanceStats(sub.code)})).filter(x=>x.stats.total>0 && x.stats.pct<75);
+  if(!s.subjects.length){
+    watch.innerHTML='<div style="font-size:12px;color:var(--muted);">Add subjects to start tracking.</div>';
+  } else if(!risky.length){
+    watch.innerHTML='<div style="font-size:12px;color:var(--muted);">No subjects below 75% right now. 👍</div>';
+  } else {
+    watch.innerHTML=risky.map(x=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;"><span>'+esc(x.sub.name)+'</span><span style="color:var(--red);font-weight:700;font-family:\'IBM Plex Mono\',monospace;">'+x.stats.pct+'%</span></div>').join('');
+  }
+
+  // deadline watch
+  let dwatch=document.getElementById('dash-deadline-watch');
+  let pending=s.deadlines.filter(d=>!d.done).sort((a,b)=>a.dueDate.localeCompare(b.dueDate)).slice(0,4);
+  if(!pending.length){
+    dwatch.innerHTML='<div style="font-size:12px;color:var(--muted);">No pending deadlines. Add lab/assignment due dates in the Syllabus tab.</div>';
+  } else {
+    dwatch.innerHTML=pending.map(d=>{
+      let daysLeft=Math.round((parseDate(d.dueDate)-parseDate(todayKey()))/86400000);
+      let color = daysLeft<0?'var(--red)':(daysLeft<=3?'var(--yellow)':'var(--muted)');
+      let label = daysLeft<0?'OVERDUE':(daysLeft===0?'TODAY':daysLeft+'d left');
+      return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;"><span>'+esc(d.title)+'</span><span style="color:'+color+';font-weight:700;font-family:\'IBM Plex Mono\',monospace;font-size:10px;">'+label+'</span></div>';
+    }).join('');
+  }
+
+  // quote
+  let qi=now.getDate()%QUOTES.length;
+  let q=QUOTES[qi];
+  document.getElementById('dash-quote').innerHTML='"'+esc(q.q)+'"<div class="quote-author">— '+esc(q.a)+'</div>';
+
+  // today's goals preview
+  let wk=getWeekKey();
+  let curWeek=s.goalWeeks.find(w=>w.weekKey===wk);
+  let goalsBox=document.getElementById('dash-today-goals');
+  if(!curWeek||!curWeek.goals.length){
+    goalsBox.innerHTML='<div style="font-size:12px;color:var(--muted);">No goals set this week. Add some in the Goals tab.</div>';
+    document.getElementById('dash-goals-count').textContent='';
+  } else {
+    let done=curWeek.goals.filter(g=>g.done).length;
+    document.getElementById('dash-goals-count').textContent=done+'/'+curWeek.goals.length;
+    goalsBox.innerHTML=curWeek.goals.slice(0,5).map((g,gi)=>'<div class="goal-item"><input type="checkbox" '+(g.done?'checked':'')+' onchange="toggleGoalDone('+curWeek.id+','+gi+')"><label class="'+(g.done?'done':'')+'" onclick="toggleGoalDone('+curWeek.id+','+gi+')">'+esc(g.text)+'</label></div>').join('');
+  }
+}
+function daysUntil(dateKey){ return Math.round((parseDate(dateKey)-parseDate(todayKey()))/86400000); }
+
+/* ============================================================ SUBJECTS PAGE ============================================================ */
+function renderSubjectsPage(){
+  let s=curSem();
+  document.getElementById('subj-count').textContent=s.subjects.length+' subjects';
+  let list=document.getElementById('subjects-edit-list');
+  if(!s.subjects.length){
+    list.innerHTML='<div class="empty-state"><span class="em">📚</span>No subjects added yet.<br>Add your subjects from your time table.</div>';
+  } else {
+    list.innerHTML=s.subjects.map((sub,i)=>(
+      '<div class="subj-edit-card">'+
+        '<button class="del-x" onclick="removeSubject('+i+')">✕</button>'+
+        '<div class="field-row"><div><label class="flabel">Code</label><input type="text" value="'+esc(sub.code)+'" onchange="updateSubjField('+i+',\'code\',this.value)" style="margin-bottom:8px;"></div><div><label class="flabel">Credits</label><input type="number" value="'+sub.credits+'" onchange="updateSubjField('+i+',\'credits\',this.value,true)" style="margin-bottom:8px;"></div></div>'+
+        '<label class="flabel">Subject Name</label><input type="text" value="'+esc(sub.name)+'" onchange="updateSubjField('+i+',\'name\',this.value)" style="margin-bottom:8px;">'+
+        '<label class="flabel" style="margin-top:0;">Max Marks — End / Mid / Quiz / Lab / Sessional</label>'+
+        '<div class="field-row" style="grid-template-columns:repeat(5,1fr);gap:5px;">'+
+          '<input type="number" value="'+sub.maxEnd+'" onchange="updateSubjField('+i+',\'maxEnd\',this.value,true)" style="padding:6px;font-size:11px;margin-bottom:0;">'+
+          '<input type="number" value="'+sub.maxMid+'" onchange="updateSubjField('+i+',\'maxMid\',this.value,true)" style="padding:6px;font-size:11px;margin-bottom:0;">'+
+          '<input type="number" value="'+sub.maxQuiz+'" onchange="updateSubjField('+i+',\'maxQuiz\',this.value,true)" style="padding:6px;font-size:11px;margin-bottom:0;">'+
+          '<input type="number" value="'+sub.maxLab+'" onchange="updateSubjField('+i+',\'maxLab\',this.value,true)" style="padding:6px;font-size:11px;margin-bottom:0;">'+
+          '<input type="number" value="'+sub.maxSess+'" onchange="updateSubjField('+i+',\'maxSess\',this.value,true)" style="padding:6px;font-size:11px;margin-bottom:0;">'+
+        '</div>'+
+      '</div>'
+    )).join('');
+  }
+  let totalCredits=s.subjects.reduce((a,b)=>a+(parseFloat(b.credits)||0),0);
+  document.getElementById('subj-total-credits').textContent=totalCredits+' credits';
+  document.getElementById('subj-credit-breakdown').innerHTML=s.subjects.map(sub=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border-soft);"><span>'+esc(sub.name)+'</span><span class="mono" style="color:var(--brass-dim);font-weight:700;">'+sub.credits+' cr</span></div>').join('')||'<div style="font-size:12px;color:var(--muted);">No subjects yet</div>';
+  renderTimetableEdit();
+}
+function addSubjectRow(){
+  curSem().subjects.push({code:'',name:'',credits:4,maxEnd:70,maxMid:20,maxQuiz:10,maxLab:0,maxSess:0});
+  save(); renderSubjectsPage();
+}
+function removeSubject(i){
+  if(!confirm('Remove this subject? Its attendance/syllabus/marks data for this semester will stay stored but unlinked.')) return;
+  curSem().subjects.splice(i,1); save(); renderSubjectsPage();
+}
+function updateSubjField(i,field,val,isNum){
+  curSem().subjects[i][field]=isNum?(parseFloat(val)||0):val;
+  save();
+}
+function saveSubjects(){ save(); renderAll(); toast('Subjects saved ✓'); }
+
+/* TIMETABLE */
+const TT_DAY_LABELS=['S','M','T','W','T','F','S'];
+function renderTimetableEdit(){
+  let s=curSem();
+  let area=document.getElementById('timetable-edit-list');
+  if(!area) return;
+  if(!s.subjects.length){
+    area.innerHTML='<div class="empty-state"><span class="em">🗓</span>Add subjects first.</div>';
+    return;
+  }
+  area.innerHTML=s.subjects.map(sub=>{
+    let days=s.timetable[sub.code]||[];
+    let dayBtns=TT_DAY_LABELS.map((lbl,d)=>'<div class="tt-day '+(days.includes(d)?'sel':'')+'" onclick="toggleTimetableDay(\''+sub.code+'\','+d+')">'+lbl+'</div>').join('');
+    return '<div class="tt-row"><div class="tt-name">'+esc(sub.name)+'</div><div class="tt-days">'+dayBtns+'</div></div>';
+  }).join('');
+}
+function toggleTimetableDay(subjCode,day){
+  let s=curSem();
+  if(!s.timetable[subjCode]) s.timetable[subjCode]=[];
+  let idx=s.timetable[subjCode].indexOf(day);
+  if(idx>-1) s.timetable[subjCode].splice(idx,1);
+  else s.timetable[subjCode].push(day);
+  save(); renderTimetableEdit();
+}
+
+/* ============================================================ ATTENDANCE PAGE ============================================================ */
+function renderAttendancePage(){
+  let s=curSem();
+  let tk=todayKey();
+  document.getElementById('att-today-date').textContent=parseDate(tk).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  let todayList=document.getElementById('att-today-list');
+  let todayWeekday=new Date(parseDate(tk)).getDay();
+  let timetableIsSet=Object.values(s.timetable||{}).some(arr=>arr&&arr.length>0);
+  let todaysSubjects = timetableIsSet
+    ? s.subjects.filter(sub=>(s.timetable[sub.code]||[]).includes(todayWeekday))
+    : s.subjects;
+  if(!s.subjects.length){
+    todayList.innerHTML='<div class="empty-state"><span class="em">✅</span>Add subjects first in the Subjects tab.</div>';
+  } else if(timetableIsSet && !todaysSubjects.length){
+    todayList.innerHTML='<div class="empty-state"><span class="em">🎉</span>No classes scheduled today based on your timetable.</div>';
+  } else {
+    let dayData=s.attendance[tk]||{};
+    todayList.innerHTML=todaysSubjects.map(sub=>{
+      let st=dayData[sub.code];
+      return '<div class="att-today-row"><div class="att-today-name">'+esc(sub.name)+'</div><div class="att-btns">'+
+        '<button class="att-btn p '+(st==='p'?'sel':'')+'" onclick="markAttendance(\''+sub.code+'\',\'p\')" title="Present">P</button>'+
+        '<button class="att-btn a '+(st==='a'?'sel':'')+'" onclick="markAttendance(\''+sub.code+'\',\'a\')" title="Absent">A</button>'+
+        '<button class="att-btn c '+(st==='c'?'sel':'')+'" onclick="markAttendance(\''+sub.code+'\',\'c\')" title="Cancelled">C</button>'+
+      '</div></div>';
+    }).join('');
+  }
+
+  let subjList=document.getElementById('att-subject-list');
+  if(!s.subjects.length){
+    subjList.innerHTML='<div class="empty-state"><span class="em">📊</span>No subjects yet.</div>';
+  } else {
+    subjList.innerHTML=s.subjects.map(sub=>{
+      let stats=getAttendanceStats(sub.code);
+      let cls=attClass(stats.pct);
+      let pctDisplay=stats.pct==null?'—':stats.pct+'%';
+      let barWidth=stats.pct==null?0:stats.pct;
+      let barColorClass=cls==='ok'?'green':(cls==='warn'?'yellow':'');
+      return '<div class="subj-row" style="flex-direction:column;align-items:stretch;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+          '<div class="subj-main"><div class="subj-name">'+esc(sub.name)+'</div><div class="subj-code">'+(stats.total>0?stats.present+'/'+stats.total+' classes attended':'No classes logged yet')+'</div></div>'+
+          '<div class="subj-pct '+cls+'">'+pctDisplay+'</div>'+
+        '</div>'+
+        '<div class="subj-bar-wrap"><div class="bar-outer"><div class="bar-fill '+barColorClass+'" style="width:'+barWidth+'%;"></div></div></div>'+
+      '</div>';
+    }).join('');
+  }
+}
+function markAttendance(subjCode,status){
+  let s=curSem(); let tk=todayKey();
+  if(!s.attendance[tk]) s.attendance[tk]={};
+  if(s.attendance[tk][subjCode]===status){ delete s.attendance[tk][subjCode]; } // toggle off
+  else { s.attendance[tk][subjCode]=status; }
+  save(); renderAttendancePage(); renderDashboard();
+}
+
+/* ============================================================ SYLLABUS PAGE ============================================================ */
+let activeSyllabusSubj=null;
+function renderSyllabusPage(){
+  let s=curSem();
+  renderDeadlines();
+  let tabs=document.getElementById('syllabus-subj-tabs');
+  if(!s.subjects.length){
+    tabs.innerHTML='';
+    document.getElementById('syllabus-units-area').innerHTML='<div class="empty-state"><span class="em">📖</span>Add subjects first in the Subjects tab.</div>';
+    return;
+  }
+  if(!activeSyllabusSubj || !s.subjects.find(x=>x.code===activeSyllabusSubj)) activeSyllabusSubj=s.subjects[0].code;
+  tabs.innerHTML=s.subjects.map(sub=>'<button class="subj-tab '+(sub.code===activeSyllabusSubj?'active':'')+'" onclick="setSyllabusSubj(\''+sub.code+'\')" title="'+esc(sub.name)+'">'+esc(sub.code||sub.name.split(' ').slice(0,2).join(' '))+'</button>').join('');
+  renderSyllabusUnits();
+}
+function setSyllabusSubj(code){ activeSyllabusSubj=code; renderSyllabusPage(); }
+
+/* DEADLINES */
+function renderDeadlines(){
+  let s=curSem();
+  let selEl=document.getElementById('new-deadline-subj');
+  if(selEl){
+    let curVal=selEl.value;
+    selEl.innerHTML=s.subjects.map(sub=>'<option value="'+esc(sub.code)+'">'+esc(sub.code||sub.name)+'</option>').join('')||'<option value="">No subjects</option>';
+    if(curVal) selEl.value=curVal;
+  }
+  let list=document.getElementById('deadlines-list');
+  if(!list) return;
+  let items=[...s.deadlines].sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  document.getElementById('deadline-count').textContent=items.filter(d=>!d.done).length+' pending';
+  if(!items.length){
+    list.innerHTML='<div class="empty-state" style="padding:14px 8px;"><span class="em">📌</span>No deadlines added yet. Add lab files, assignments, or submission dates below.</div>';
+    return;
+  }
+  let todayK=todayKey();
+  list.innerHTML=items.map((d,origIdx)=>{
+    let realIdx=s.deadlines.indexOf(d);
+    let sub=s.subjects.find(x=>x.code===d.subjCode);
+    let daysLeft=Math.round((parseDate(d.dueDate)-parseDate(todayK))/86400000);
+    let badge;
+    if(d.done) badge='<span class="deadline-badge ok">DONE</span>';
+    else if(daysLeft<0) badge='<span class="deadline-badge overdue">OVERDUE</span>';
+    else if(daysLeft===0) badge='<span class="deadline-badge soon">TODAY</span>';
+    else if(daysLeft<=3) badge='<span class="deadline-badge soon">'+daysLeft+'D LEFT</span>';
+    else badge='<span class="deadline-badge ok">'+daysLeft+'D LEFT</span>';
+    return '<div class="deadline-row">'+
+      '<input type="checkbox" '+(d.done?'checked':'')+' onchange="toggleDeadline('+realIdx+')">'+
+      '<div class="deadline-main"><div class="deadline-title '+(d.done?'done':'')+'">'+esc(d.title)+'</div><div class="deadline-sub">'+(sub?esc(sub.code||sub.name):'')+' · due '+parseDate(d.dueDate).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</div></div>'+
+      badge+
+      '<button class="deadline-del" onclick="deleteDeadline('+realIdx+')">✕</button>'+
+    '</div>';
+  }).join('');
+}
+function addDeadline(){
+  let subjCode=document.getElementById('new-deadline-subj').value;
+  let dueDate=document.getElementById('new-deadline-date').value;
+  let title=document.getElementById('new-deadline-title').value.trim();
+  if(!title){ toast('Enter what\'s due first'); return; }
+  if(!dueDate){ toast('Pick a due date'); return; }
+  let s=curSem();
+  s.deadlines.push({id:Date.now(),subjCode,title,dueDate,done:false});
+  document.getElementById('new-deadline-title').value='';
+  document.getElementById('new-deadline-date').value='';
+  save(); renderDeadlines(); toast('Deadline added 📌');
+}
+function toggleDeadline(i){
+  let s=curSem();
+  s.deadlines[i].done=!s.deadlines[i].done;
+  save(); renderDeadlines(); renderDashboard();
+}
+function deleteDeadline(i){
+  let s=curSem();
+  s.deadlines.splice(i,1);
+  save(); renderDeadlines();
+}
+function getOverallSyllabusPct(){
+  let s=curSem(); let total=0,done=0;
+  s.subjects.forEach(sub=>{
+    let units=s.syllabus[sub.code]||[];
+    total+=units.length; done+=units.filter(u=>u.done).length;
+  });
+  return total?Math.round(done/total*100):0;
+}
+function renderSyllabusUnits(){
+  let s=curSem();
+  let activeSub=s.subjects.find(x=>x.code===activeSyllabusSubj);
+  let units=s.syllabus[activeSyllabusSubj]||[];
+  let area=document.getElementById('syllabus-units-area');
+  let done=units.filter(u=>u.done).length;
+  let pct=units.length?Math.round(done/units.length*100):0;
+  let nameHeader=activeSub?'<div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;">'+esc(activeSub.name)+'</div>':'';
+  let header=nameHeader+'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div style="font-size:11px;color:var(--muted);">'+done+'/'+units.length+' topics done</div><div style="font-size:13px;font-weight:800;color:var(--brass-dim);font-family:\'IBM Plex Mono\',monospace;">'+pct+'%</div></div><div class="bar-outer" style="margin-bottom:12px;"><div class="bar-fill" style="width:'+pct+'%;"></div></div>';
+  if(!units.length){
+    area.innerHTML=header+'<div class="empty-state" style="padding:20px 12px;"><span class="em">📝</span>No topics added yet for this subject.<br>Add units/topics from your syllabus below.</div>';
+  } else {
+    area.innerHTML=header+units.map((u,i)=>(
+      '<div class="unit-row"><input type="checkbox" '+(u.done?'checked':'')+' onchange="toggleUnit('+i+')" id="u-'+i+'"><label for="u-'+i+'" class="'+(u.done?'done':'')+'">'+esc(u.text)+'</label><button class="unit-del" onclick="deleteUnit('+i+')">✕</button></div>'
+    )).join('');
+  }
+}
+function addUnit(){
+  let input=document.getElementById('new-unit-input');
+  let text=input.value.trim(); if(!text||!activeSyllabusSubj) return;
+  let s=curSem();
+  if(!s.syllabus[activeSyllabusSubj]) s.syllabus[activeSyllabusSubj]=[];
+  s.syllabus[activeSyllabusSubj].push({id:Date.now(),text,done:false});
+  input.value=''; save(); renderSyllabusUnits();
+}
+function toggleUnit(i){
+  let s=curSem();
+  s.syllabus[activeSyllabusSubj][i].done=!s.syllabus[activeSyllabusSubj][i].done;
+  save(); renderSyllabusUnits();
+}
+function deleteUnit(i){
+  let s=curSem();
+  s.syllabus[activeSyllabusSubj].splice(i,1);
+  save(); renderSyllabusUnits();
+}
+
+/* ============================================================ EXAMS PAGE / SGPA ============================================================ */
+function renderExamsPage(){
+  let s=curSem();
+  document.getElementById('sgpa-which-sem').textContent=SEM_LABELS[STATE.currentSem];
+  let list=document.getElementById('exam-marks-list');
+  if(!s.subjects.length){
+    list.innerHTML='<div class="empty-state"><span class="em">🎯</span>Add subjects first in the Subjects tab.</div>';
+    document.getElementById('sgpa-num').textContent='—';
+    document.getElementById('sgpa-note').textContent='No subjects yet.';
+    renderCGPACard();
+    return;
+  }
+  list.innerHTML=s.subjects.map(sub=>{
+    let m=s.marks[sub.code]||{};
+    let maxInternal=sub.maxMid+sub.maxQuiz+sub.maxLab+sub.maxSess;
+    let gotInternal=(parseFloat(m.midsem)||0)+(parseFloat(m.quiz)||0)+(parseFloat(m.lab)||0)+(parseFloat(m.sess)||0);
+    let maxTotal=sub.maxEnd+maxInternal;
+    let hasEnd=m.endsem!=null && m.endsem!=='';
+    let hasAnyInternal=['midsem','quiz','lab','sess'].some(f=>m[f]!=null && m[f]!=='');
+    let footer;
+    if(hasEnd){
+      let got=gotInternal+(parseFloat(m.endsem)||0);
+      footer='Total: <b>'+got+' / '+maxTotal+'</b> ('+(maxTotal?Math.round(got/maxTotal*100):0)+'%)';
+    } else if(hasAnyInternal && maxInternal>0){
+      footer='Internal so far: <b>'+gotInternal+' / '+maxInternal+'</b> · End-Sem not entered yet';
+    } else {
+      footer='No marks entered yet';
+    }
+    return '<div class="exam-subj-card">'+
+      '<div class="exam-subj-name">'+esc(sub.name)+' <span style="color:var(--muted);font-size:10px;font-weight:400;">('+sub.credits+' cr)</span></div>'+
+      '<div class="exam-marks-row">'+
+        (sub.maxMid>0?'<div class="mfield"><label>Mid (/'+sub.maxMid+')</label><input type="number" value="'+(m.midsem??'')+'" onchange="updateMark(\''+sub.code+'\',\'midsem\',this.value)"></div>':'')+
+        (sub.maxQuiz>0?'<div class="mfield"><label>Quiz (/'+sub.maxQuiz+')</label><input type="number" value="'+(m.quiz??'')+'" onchange="updateMark(\''+sub.code+'\',\'quiz\',this.value)"></div>':'')+
+        (sub.maxLab>0?'<div class="mfield"><label>Lab (/'+sub.maxLab+')</label><input type="number" value="'+(m.lab??'')+'" onchange="updateMark(\''+sub.code+'\',\'lab\',this.value)"></div>':'')+
+        (sub.maxSess>0?'<div class="mfield"><label>Sess. (/'+sub.maxSess+')</label><input type="number" value="'+(m.sess??'')+'" onchange="updateMark(\''+sub.code+'\',\'sess\',this.value)"></div>':'')+
+        (sub.maxEnd>0?'<div class="mfield"><label>End-Sem (/'+sub.maxEnd+')</label><input type="number" value="'+(m.endsem??'')+'" onchange="updateMark(\''+sub.code+'\',\'endsem\',this.value)"></div>':'')+
+      '</div>'+
+      '<div class="exam-total">'+footer+'</div>'+
+    '</div>';
+  }).join('');
+  computeSGPA();
+}
+function updateMark(code,field,val){
+  let s=curSem();
+  if(!s.marks[code]) s.marks[code]={};
+  s.marks[code][field]=val===''?null:parseFloat(val);
+  save(); renderExamsPage();
+}
+function pctToGradePoint(pct){
+  if(pct>=90) return 10;
+  if(pct>=80) return 9;
+  if(pct>=70) return 8;
+  if(pct>=60) return 7;
+  if(pct>=50) return 6;
+  if(pct>=40) return 5;
+  return 0;
+}
+function computeSemGPA(semData){
+  let totalCredits=0,weightedSum=0,includedCount=0,totalSubjWithEnd=0;
+  semData.subjects.forEach(sub=>{
+    if(!sub.maxEnd) return; // subjects with no end-sem component (e.g. pure lab/sessional) skip GPA calc
+    totalSubjWithEnd++;
+    let m=semData.marks[sub.code]||{};
+    if(m.endsem==null || m.endsem===''){ return; }
+    let maxTotal=sub.maxEnd+sub.maxMid+sub.maxQuiz+sub.maxLab+sub.maxSess;
+    if(!maxTotal) return;
+    let got=(parseFloat(m.endsem)||0)+(parseFloat(m.midsem)||0)+(parseFloat(m.quiz)||0)+(parseFloat(m.lab)||0)+(parseFloat(m.sess)||0);
+    let pct=got/maxTotal*100;
+    let gp=pctToGradePoint(pct);
+    totalCredits+=sub.credits;
+    weightedSum+=gp*sub.credits;
+    includedCount++;
+  });
+  return {totalCredits,weightedSum,includedCount,totalSubjWithEnd,sgpa:totalCredits?(weightedSum/totalCredits):0};
+}
+function computeCGPA(){
+  let totalCredits=0,weightedSum=0,semsWithData=0;
+  for(let i=1;i<=8;i++){
+    let r=computeSemGPA(STATE.sems[i]);
+    if(r.includedCount>0){
+      totalCredits+=r.totalCredits; weightedSum+=r.weightedSum; semsWithData++;
+    }
+  }
+  return {cgpa:totalCredits?(weightedSum/totalCredits):0,semsWithData,totalCredits};
+}
+function computeSGPA(){
+  let s=curSem();
+  let r=computeSemGPA(s);
+  let sgpaEl=document.getElementById('sgpa-num');
+  let noteEl=document.getElementById('sgpa-note');
+  if(r.includedCount===0){
+    sgpaEl.textContent='—';
+    if(noteEl) noteEl.textContent=r.totalSubjWithEnd?'Enter End-Sem marks below to see your SGPA estimate.':'No subjects with end-sem exams yet.';
+  } else {
+    sgpaEl.textContent=r.sgpa.toFixed(2);
+    if(noteEl) noteEl.textContent=r.includedCount<r.totalSubjWithEnd?'Based on '+r.includedCount+' of '+r.totalSubjWithEnd+' subjects (end-sem marks still missing for the rest).':'Based on all '+r.totalSubjWithEnd+' graded subjects.';
+  }
+  renderCGPACard();
+}
+function renderCGPACard(){
+  let cgpaEl=document.getElementById('cgpa-num');
+  let cgpaNote=document.getElementById('cgpa-note');
+  if(!cgpaEl) return;
+  let c=computeCGPA();
+  if(!c.semsWithData){
+    cgpaEl.textContent='—';
+    cgpaNote.textContent='No completed semesters with End-Sem marks yet.';
+  } else {
+    cgpaEl.textContent=c.cgpa.toFixed(2);
+    cgpaNote.textContent='Across '+c.semsWithData+' of 8 semesters · '+c.totalCredits+' credits counted.';
+  }
+}
+
+/* ============================================================ GOALS ============================================================ */
+function switchGoalSection(name){
+  ['weekly','calendar'].forEach(sec=>{
+    document.getElementById('goals-'+sec+'-section').style.display=sec===name?'block':'none';
+    document.getElementById('goal-tab-'+sec).classList.toggle('active',sec===name);
+  });
+  if(name==='calendar') renderStudyCalendar();
+}
+function getWeekKey(){
+  let now=new Date();
+  let d=new Date(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()));
+  let day=d.getUTCDay()||7; d.setUTCDate(d.getUTCDate()+4-day);
+  let ys=new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  return now.getFullYear()+'-W'+Math.ceil((((d-ys)/86400000)+1)/7);
+}
+function getWeekRangeLabel(date){
+  let d=new Date(date),day=d.getDay()||7;
+  let mon=new Date(d); mon.setDate(d.getDate()-day+1);
+  let sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  return mon.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' – '+sun.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function addWeeklyGoal(){
+  let input=document.getElementById('new-goal-input');
+  let text=input.value.trim(); if(!text) return;
+  let s=curSem(); let wk=getWeekKey();
+  if(!s.goalWeeks.length||s.goalWeeks[0].weekKey!==wk){
+    s.goalWeeks.unshift({id:Date.now(),weekKey:wk,weekLabel:getWeekRangeLabel(new Date()),goals:[]});
+  }
+  s.goalWeeks[0].goals.push({id:Date.now(),text,done:false});
+  input.value=''; save(); renderGoals(); toast('Goal added!');
+}
+function toggleGoalDone(weekId,gi){
+  let s=curSem(); let w=s.goalWeeks.find(x=>x.id===weekId);
+  if(w){ w.goals[gi].done=!w.goals[gi].done; save(); renderGoals(); renderDashboard(); }
+}
+function deleteGoal(weekId,gi){
+  let s=curSem(); let w=s.goalWeeks.find(x=>x.id===weekId);
+  if(w){ w.goals.splice(gi,1); save(); renderGoals(); }
+}
+function renderGoals(){
+  let s=curSem();
+  let wk=getWeekKey();
+  let cur=s.goalWeeks.find(w=>w.weekKey===wk);
+  let list=document.getElementById('weekly-goals-list');
+  if(!cur||!cur.goals.length){
+    list.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">No goals yet this week. Add your first goal above!</div>';
+  } else {
+    list.innerHTML=cur.goals.map((g,gi)=>'<div class="goal-item"><input type="checkbox" '+(g.done?'checked':'')+' onchange="toggleGoalDone('+cur.id+','+gi+')"><label class="'+(g.done?'done':'')+'" onclick="toggleGoalDone('+cur.id+','+gi+')">'+esc(g.text)+'</label><button onclick="deleteGoal('+cur.id+','+gi+')" style="background:none;border:none;color:var(--grey);cursor:pointer;font-size:13px;">✕</button></div>').join('');
+  }
+  let past=document.getElementById('past-weeks-list');
+  let pastWeeks=s.goalWeeks.filter(w=>w.weekKey!==wk).slice(0,5);
+  if(!pastWeeks.length){ past.innerHTML='<div style="font-size:12px;color:var(--muted);">No past weeks yet</div>'; }
+  else{ past.innerHTML=pastWeeks.map(w=>'<div class="goal-week-card"><div class="gw-head"><span class="gwt">'+w.weekLabel+'</span></div>'+w.goals.map(g=>'<div class="goal-item"><input type="checkbox" '+(g.done?'checked':'')+' disabled><label class="'+(g.done?'done':'')+'">'+esc(g.text)+'</label></div>').join('')+'</div>').join(''); }
+}
+
+/* STUDY CALENDAR */
+function renderStudyCalendar(){
+  let s=curSem();
+  let now=new Date();
+  document.getElementById('cal-month-label').textContent=MONTH_NAMES[now.getMonth()]+' '+now.getFullYear();
+  let dowRow=document.getElementById('cal-dow-row');
+  dowRow.innerHTML=DOW.map(d=>'<div class="cal-dow">'+d+'</div>').join('');
+
+  let year=now.getFullYear(),month=now.getMonth();
+  let firstDay=new Date(year,month,1);
+  let startOffset=(firstDay.getDay()+6)%7; // Mon=0
+  let daysInMonth=new Date(year,month+1,0).getDate();
+  let grid=document.getElementById('cal-grid');
+  let cells=[];
+  for(let i=0;i<startOffset;i++) cells.push('<div class="cal-cell empty"></div>');
+  for(let d=1;d<=daysInMonth;d++){
+    let key=year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    let status=s.studyCal[key];
+    let isToday=key===todayKey();
+    cells.push('<div class="cal-cell '+(status||'')+' '+(isToday?'today':'')+'" onclick="cycleStudyDay(\''+key+'\')">'+d+'</div>');
+  }
+  grid.innerHTML=cells.join('');
+}
+function cycleStudyDay(key){
+  let s=curSem();
+  let cur=s.studyCal[key];
+  let next = cur==null?'green':(cur==='green'?'yellow':(cur==='yellow'?'grey':null));
+  if(next===null) delete s.studyCal[key]; else s.studyCal[key]=next;
+  save(); renderStudyCalendar(); computeStudyStreak(); renderDashboard();
+}
+function computeStudyStreak(){
+  let s=curSem();
+  let cal=s.studyCal;
+  let cur=0,best=0,run=0,prev=null;
+  Object.keys(cal).sort().forEach(k=>{
+    let st=cal[k];
+    let cons=prev&&(parseDate(k)-parseDate(prev))/86400000===1;
+    if(st==='grey'){ run=0; }
+    else if(cons){ run++; }
+    else{ run=1; }
+    if(run>best) best=run;
+    prev=k;
+  });
+  let today=todayKey();
+  let d=new Date(parseDate(today));
+  let todaySt=cal[today];
+  if(todaySt && todaySt!=='grey'){
+    cur=1; d.setDate(d.getDate()-1);
+    while(true){ let k=fmtDate(d); let st=cal[k]; if(!st||st==='grey') break; cur++; d.setDate(d.getDate()-1); }
+  } else {
+    let yday=fmtDate(new Date(parseDate(today).getTime()-86400000));
+    let ySt=cal[yday];
+    if(ySt && ySt!=='grey'){
+      cur=1; let d2=new Date(parseDate(yday)); d2.setDate(d2.getDate()-1);
+      while(true){ let k=fmtDate(d2); let st=cal[k]; if(!st||st==='grey') break; cur++; d2.setDate(d2.getDate()-1); }
+    }
+  }
+  STATE._curStreak=cur; STATE._bestStreak=Math.max(best,cur);
+  let curEl=document.getElementById('study-streak-cur');
+  let bestEl=document.getElementById('study-streak-best');
+  if(curEl) curEl.textContent=cur;
+  if(bestEl) bestEl.textContent=STATE._bestStreak;
+}
+
+/* ============================================================ TOAST ============================================================ */
+function toast(msg){ let t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+
+/* ============================================================ INIT ============================================================ */
+document.addEventListener('DOMContentLoaded',()=>{
+  populateSemSelect();
+  renderAll();
+});
+
+/* ============================================================ PWA / SERVICE WORKER ============================================================ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
